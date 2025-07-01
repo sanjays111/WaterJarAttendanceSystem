@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using SendGrid;
@@ -109,8 +109,6 @@ namespace WaterJarAttendanceSystem.Controllers
                 return BadRequest("No user found with this email.");
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-            // Update URL to your actual frontend reset password route
             var resetUrl = $"{_config["Frontend:ResetPasswordUrl"]}?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
             var emailContent = $"<p>Click <a href='{resetUrl}'>here</a> to reset your password.</p>";
 
@@ -146,7 +144,18 @@ namespace WaterJarAttendanceSystem.Controllers
             var from = new EmailAddress(fromEmail, fromName);
             var to = new EmailAddress(toEmail);
             var msg = MailHelper.CreateSingleEmail(from, to, subject, "", htmlContent);
-            await client.SendEmailAsync(msg);
+
+            var response = await client.SendEmailAsync(msg);
+
+            var status = response.StatusCode;
+            var responseBody = await response.Body.ReadAsStringAsync();
+            Console.WriteLine($"SendGrid response status: {status}");
+            Console.WriteLine($"SendGrid response body: {responseBody}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"SendGrid failed with status code: {status}. Body: {responseBody}");
+            }
         }
 
         private string GenerateJwtToken(ApplicationUser user)
