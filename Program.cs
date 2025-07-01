@@ -66,7 +66,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 // ✅ CORS
-var frontendUrl = configuration["Frontend:Url"];
+var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL") ?? configuration["Frontend:Url"];
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -81,7 +81,7 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// ✅ Support for Heroku dynamic ports
+// ✅ Support for dynamic ports (Heroku / Render)
 if (!app.Environment.IsDevelopment())
 {
     var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
@@ -94,7 +94,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// ✅ Simple default endpoint
 app.MapGet("/", () => "✅ Water Jar Attendance API is running.");
 
 app.Run();
